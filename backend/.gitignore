@@ -1,0 +1,13 @@
+# Bagimliliklar
+node_modules/
+
+# Yuklenen videolar — repoya dahil etmeye gerek yok
+uploads/videos/*
+!uploads/videos/.gitkeep
+
+# Ortam degiskenleri — hassas bilgiler iceriyor
+.env
+
+# Log dosyalari
+*.log
+npm-debug.log*
