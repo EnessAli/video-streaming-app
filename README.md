@@ -2,32 +2,48 @@
 
 A full-stack web application for video uploading, sensitivity analysis, and streaming.
 
+## Live Demo
+
+**Frontend:** [https://video-streaming-app-alpha-amber.vercel.app](https://video-streaming-app-alpha-amber.vercel.app)
+
+### Demo Accounts
+
+| Role | Email | Password |
+|------|-------|----------|
+| **Admin** | `admin@videostream.com` | `Admin123!` |
+| **Editor** | `test@test.com` | `test@test.com` |
+| **Viewer** | `test1@test1.com` | `test1@test1.com` |
+
+> **Admin** — Full access: user management, video management, upload, streaming  
+> **Editor** — Can upload and manage own videos, stream  
+> **Viewer** — Can only watch videos
+
 ## Technologies
 
 ### Backend
-- **Node.js** + **Express.js** - REST API
-- **MongoDB** + **Mongoose** - Database
-- **Socket.io** - Real-time notifications
-- **JWT** - Authentication (access + refresh token)
-- **Multer** - File upload
-- **bcryptjs** - Password hashing
+- **Node.js** + **Express.js** — REST API
+- **MongoDB** + **Mongoose** — Database
+- **Socket.io** — Real-time notifications
+- **JWT** — Authentication (access + refresh token)
+- **Multer** — File upload
+- **bcryptjs** — Password hashing
 
 ### Frontend
-- **React 18** + **Vite** - UI framework
-- **Tailwind CSS** - Styling
-- **React Router v6** - Routing
-- **Axios** - HTTP requests
-- **Socket.io Client** - Real-time connection
-- **Context API** - State management
+- **React 18** + **Vite** — UI framework
+- **Tailwind CSS** — Styling
+- **React Router v6** — Routing
+- **Axios** — HTTP requests
+- **Socket.io Client** — Real-time connection
+- **Context API** — State management
 
 ## Features
 
-- User registration/login system (JWT-based)
+- User registration and login system (JWT-based)
 - Role-based access control (viewer, editor, admin)
-- Video upload (drag & drop, 100MB limit)
+- Video upload (drag & drop, max 100MB)
 - Simulated sensitivity analysis (real-time progress via Socket.io)
 - Video streaming with HTTP Range Requests
-- Video library (search, filtering, pagination)
+- Video library with search, filtering and pagination
 - Admin panel (user management, video management)
 - Responsive design
 
@@ -90,14 +106,14 @@ VITE_SOCKET_URL=http://localhost:5000
 | POST | `/api/auth/login` | Login |
 | POST | `/api/auth/refresh` | Token refresh |
 | POST | `/api/auth/logout` | Logout |
-| GET | `/api/auth/me` | Current user |
+| GET | `/api/auth/me` | Current user info |
 
 ### Videos
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/videos/upload` | Upload video (editor/admin) |
-| GET | `/api/videos` | User's videos |
-| GET | `/api/videos/all` | All videos (admin) |
+| GET | `/api/videos` | List user's videos |
+| GET | `/api/videos/all` | List all videos (admin) |
 | GET | `/api/videos/:id` | Video details |
 | PUT | `/api/videos/:id` | Update video |
 | DELETE | `/api/videos/:id` | Delete video |
@@ -106,9 +122,9 @@ VITE_SOCKET_URL=http://localhost:5000
 ### Users (Admin)
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/users` | All users |
+| GET | `/api/users` | List all users |
 | GET | `/api/users/:id` | User details |
-| PUT | `/api/users/:id/role` | Update role |
+| PUT | `/api/users/:id/role` | Update user role |
 | DELETE | `/api/users/:id` | Delete user |
 
 ## Project Structure
@@ -125,7 +141,7 @@ VITE_SOCKET_URL=http://localhost:5000
 │   │   ├── socket/          # Socket.io configuration
 │   │   ├── utils/           # Helper functions
 │   │   └── server.js        # Main entry point
-│   └── uploads/videos/      # Uploaded videos
+│   └── uploads/videos/      # Uploaded video files
 ├── frontend/
 │   ├── src/
 │   │   ├── components/      # UI components
@@ -141,53 +157,24 @@ VITE_SOCKET_URL=http://localhost:5000
 
 ## Deployment
 
-### Frontend - Vercel
+### Frontend — Vercel
 1. Connect your GitHub repo to Vercel
 2. Root directory: `frontend`
 3. Build command: `npm run build`
-4. Output: `dist`
-5. Add environment variables
+4. Output directory: `dist`
+5. Add environment variables (`VITE_API_URL`, `VITE_SOCKET_URL`)
 
-### Backend - Render
+### Backend — Render
 1. Create a new Web Service on Render
 2. Root directory: `backend`
 3. Build command: `npm install`
 4. Start command: `npm start`
 5. Add environment variables
 
-### Database - MongoDB Atlas
-1. Create a free M0 cluster on Atlas
+### Database — MongoDB Atlas
+1. Create a free M0 cluster
 2. Add the connection string to backend `.env`
 
 ## License
-
-MIT
-│   │   ├── App.jsx          # Ana uygulama + routing
-│   │   └── main.jsx         # Entry point
-│   └── public/
-└── README.md
-```
-
-## Deployment
-
-### Frontend - Vercel
-1. Vercel'e GitHub repo bağlayın
-2. Root directory: `frontend`
-3. Build command: `npm run build`
-4. Output: `dist`
-5. Ortam değişkenlerini ekleyin
-
-### Backend - Render
-1. Render'da yeni Web Service oluşturun
-2. Root directory: `backend`
-3. Build command: `npm install`
-4. Start command: `npm start`
-5. Ortam değişkenlerini ekleyin
-
-### Veritabanı - MongoDB Atlas
-1. Atlas'ta ücretsiz M0 cluster oluşturun
-2. Connection string'i backend `.env`'ye ekleyin
-
-## Lisans
 
 MIT
