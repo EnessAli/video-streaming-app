@@ -8,7 +8,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
 import videoService from '../services/videoService';
-import Navbar from '../components/layout/Navbar';
 import StatusBadge from '../components/common/StatusBadge';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
@@ -86,8 +85,7 @@ export default function VideoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
+      <div>
         <LoadingSpinner text="Loading video..." />
       </div>
     );
@@ -95,8 +93,7 @@ export default function VideoPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <Navbar />
+      <div>
         <div className="max-w-4xl mx-auto px-4 py-8 text-center">
           <p className="text-red-600">{error}</p>
           <button onClick={() => navigate('/')} className="mt-4 text-blue-600 hover:underline">
@@ -108,9 +105,7 @@ export default function VideoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
+    <div>
       <div className="max-w-5xl mx-auto px-4 py-6">
         {/* back button */}
         <button

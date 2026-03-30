@@ -8,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useSocket } from '../hooks/useSocket';
 import videoService from '../services/videoService';
-import Navbar from '../components/layout/Navbar';
 import VideoCard from '../components/video/VideoCard';
 import LoadingSpinner from '../components/common/LoadingSpinner';
 
@@ -68,9 +67,7 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-
+    <div>
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* title and upload button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
