@@ -1,18 +1,18 @@
 /*
-  Kullanici yonetimi controller'i — sadece admin erisebilir
-  Tum kullanicilari listeleme, rol degistirme ve silme islemleri
+  User management controller — admin access only
+  List all users, change roles and delete operations
 */
 const User = require('../models/User');
 const Video = require('../models/Video');
 const fs = require('fs');
 const path = require('path');
 
-// tum kullanicilari getir — admin panelde tablo icin
+// Get all users — for the admin panel table
 const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find().select('-refreshTokens').sort({ createdAt: -1 });
 
-    // her kullanicinin video sayisini da gonder
+    // Also send each user's video count
     const usersWithStats = await Promise.all(
       users.map(async (user) => {
         const videoCount = await Video.countDocuments({ uploader: user._id });
@@ -26,7 +26,7 @@ const getAllUsers = async (req, res, next) => {
   }
 };
 
-// kullanici rolunu guncelle — admin baskasinin rolunu degistirebilir
+// Update user role — admin can change another user's role
 const updateUserRole = async (req, res, next) => {
   try {
     const { role } = req.body;
@@ -35,15 +35,15 @@ const updateUserRole = async (req, res, next) => {
     if (!validRoles.includes(role)) {
       return res.status(400).json({
         success: false,
-        message: 'Gecersiz rol. Gecerli roller: viewer, editor, admin'
+        message: 'Invalid role. Valid roles: viewer, editor, admin'
       });
     }
 
-    // kendi rolunu degistirmeye calismasin
+    // Prevent changing own role
     if (req.params.id === req.user._id.toString()) {
       return res.status(400).json({
         success: false,
-        message: 'Kendi rolunuzu degistiremezsiniz'
+        message: 'You cannot change your own role'
       });
     }
 
@@ -56,7 +56,7 @@ const updateUserRole = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Kullanici bulunamadi'
+        message: 'User not found'
       });
     }
 
@@ -66,13 +66,13 @@ const updateUserRole = async (req, res, next) => {
   }
 };
 
-// kullaniciyi sil — videolarini da temizle
+// Delete user — also clean up their videos
 const deleteUser = async (req, res, next) => {
   try {
     if (req.params.id === req.user._id.toString()) {
       return res.status(400).json({
         success: false,
-        message: 'Kendi hesabinizi silemezsiniz'
+        message: 'You cannot delete your own account'
       });
     }
 
@@ -80,11 +80,11 @@ const deleteUser = async (req, res, next) => {
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'Kullanici bulunamadi'
+        message: 'User not found'
       });
     }
 
-    // kullanicinin tum videolarini bul ve dosyalarini sil
+    // Find all user's videos and delete their files
     const videos = await Video.find({ uploader: user._id });
     for (const video of videos) {
       const filePath = path.resolve(video.filepath);
@@ -93,11 +93,11 @@ const deleteUser = async (req, res, next) => {
       }
     }
 
-    // DB'den videolari ve kullaniciyi sil
+    // Delete videos and user from DB
     await Video.deleteMany({ uploader: user._id });
     await User.findByIdAndDelete(req.params.id);
 
-    res.json({ success: true, message: 'Kullanici ve videolari silindi' });
+    res.json({ success: true, message: 'User and their videos have been deleted' });
   } catch (error) {
     next(error);
   }

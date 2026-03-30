@@ -1,53 +1,53 @@
 # Video Streaming Platform
 
-Video yükleme, hassasiyet analizi ve streaming işlemlerini gerçekleştiren full-stack web uygulaması.
+A full-stack web application for video uploading, sensitivity analysis, and streaming.
 
-## Teknolojiler
+## Technologies
 
 ### Backend
 - **Node.js** + **Express.js** - REST API
-- **MongoDB** + **Mongoose** - Veritabanı
-- **Socket.io** - Gerçek zamanlı bildirimler
-- **JWT** - Kimlik doğrulama (access + refresh token)
-- **Multer** - Dosya yükleme
-- **bcryptjs** - Şifre hashleme
+- **MongoDB** + **Mongoose** - Database
+- **Socket.io** - Real-time notifications
+- **JWT** - Authentication (access + refresh token)
+- **Multer** - File upload
+- **bcryptjs** - Password hashing
 
 ### Frontend
 - **React 18** + **Vite** - UI framework
-- **Tailwind CSS** - Stil
-- **React Router v6** - Yönlendirme
-- **Axios** - HTTP istekleri
-- **Socket.io Client** - Gerçek zamanlı bağlantı
-- **Context API** - State yönetimi
+- **Tailwind CSS** - Styling
+- **React Router v6** - Routing
+- **Axios** - HTTP requests
+- **Socket.io Client** - Real-time connection
+- **Context API** - State management
 
-## Özellikler
+## Features
 
-- Kullanıcı kayıt/giriş sistemi (JWT ile)
-- Rol tabanlı erişim kontrolü (viewer, editor, admin)
-- Video yükleme (drag & drop, 100MB limit)
-- Simüle edilmiş hassasiyet analizi (Socket.io ile gerçek zamanlı ilerleme)
-- HTTP Range Request ile video streaming
-- Video kütüphanesi (arama, filtreleme, sayfalama)
-- Admin paneli (kullanıcı yönetimi, video yönetimi)
-- Responsive tasarım
+- User registration/login system (JWT-based)
+- Role-based access control (viewer, editor, admin)
+- Video upload (drag & drop, 100MB limit)
+- Simulated sensitivity analysis (real-time progress via Socket.io)
+- Video streaming with HTTP Range Requests
+- Video library (search, filtering, pagination)
+- Admin panel (user management, video management)
+- Responsive design
 
-## Kurulum
+## Setup
 
-### Gereksinimler
+### Requirements
 - Node.js v18+
-- MongoDB (yerel veya Atlas)
+- MongoDB (local or Atlas)
 
 ### Backend
 
 ```bash
 cd backend
 cp .env.example .env
-# .env dosyasını düzenleyin (MongoDB URI, JWT secret vb.)
+# Edit .env file (MongoDB URI, JWT secret, etc.)
 npm install
 npm run dev
 ```
 
-Backend varsayılan olarak `http://localhost:5000` adresinde çalışır.
+Backend runs on `http://localhost:5000` by default.
 
 ### Frontend
 
@@ -58,9 +58,9 @@ npm install
 npm run dev
 ```
 
-Frontend varsayılan olarak `http://localhost:5173` adresinde çalışır.
+Frontend runs on `http://localhost:5173` by default.
 
-### Ortam Değişkenleri
+### Environment Variables
 
 #### Backend (.env)
 ```
@@ -84,55 +84,84 @@ VITE_SOCKET_URL=http://localhost:5000
 ## API Endpoints
 
 ### Auth
-| Method | Endpoint | Açıklama |
-|--------|----------|----------|
-| POST | `/api/auth/register` | Kayıt |
-| POST | `/api/auth/login` | Giriş |
-| POST | `/api/auth/refresh` | Token yenileme |
-| POST | `/api/auth/logout` | Çıkış |
-| GET | `/api/auth/me` | Mevcut kullanıcı |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register |
+| POST | `/api/auth/login` | Login |
+| POST | `/api/auth/refresh` | Token refresh |
+| POST | `/api/auth/logout` | Logout |
+| GET | `/api/auth/me` | Current user |
 
 ### Videos
-| Method | Endpoint | Açıklama |
-|--------|----------|----------|
-| POST | `/api/videos/upload` | Video yükle (editor/admin) |
-| GET | `/api/videos` | Kullanıcının videoları |
-| GET | `/api/videos/all` | Tüm videolar (admin) |
-| GET | `/api/videos/:id` | Video detay |
-| PUT | `/api/videos/:id` | Video güncelle |
-| DELETE | `/api/videos/:id` | Video sil |
-| GET | `/api/videos/stream/:id` | Video stream |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/videos/upload` | Upload video (editor/admin) |
+| GET | `/api/videos` | User's videos |
+| GET | `/api/videos/all` | All videos (admin) |
+| GET | `/api/videos/:id` | Video details |
+| PUT | `/api/videos/:id` | Update video |
+| DELETE | `/api/videos/:id` | Delete video |
+| GET | `/api/videos/stream/:id` | Stream video |
 
 ### Users (Admin)
-| Method | Endpoint | Açıklama |
-|--------|----------|----------|
-| GET | `/api/users` | Tüm kullanıcılar |
-| GET | `/api/users/:id` | Kullanıcı detay |
-| PUT | `/api/users/:id/role` | Rol güncelle |
-| DELETE | `/api/users/:id` | Kullanıcı sil |
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users` | All users |
+| GET | `/api/users/:id` | User details |
+| PUT | `/api/users/:id/role` | Update role |
+| DELETE | `/api/users/:id` | Delete user |
 
-## Proje Yapısı
+## Project Structure
 
 ```
 ├── backend/
 │   ├── src/
-│   │   ├── config/         # Veritabanı, multer, env ayarları
-│   │   ├── controllers/    # İstek işleyicileri
-│   │   ├── middleware/      # Auth, rol kontrolü, hata yakalama
-│   │   ├── models/          # Mongoose modelleri
-│   │   ├── routes/          # API rotaları
-│   │   ├── services/        # İş mantığı (token, video işleme)
-│   │   ├── socket/          # Socket.io yapılandırması
-│   │   ├── utils/           # Yardımcı fonksiyonlar
-│   │   └── server.js        # Ana giriş noktası
-│   └── uploads/videos/      # Yüklenen videolar
+│   │   ├── config/         # Database, multer, env settings
+│   │   ├── controllers/    # Request handlers
+│   │   ├── middleware/      # Auth, role check, error handling
+│   │   ├── models/          # Mongoose models
+│   │   ├── routes/          # API routes
+│   │   ├── services/        # Business logic (token, video processing)
+│   │   ├── socket/          # Socket.io configuration
+│   │   ├── utils/           # Helper functions
+│   │   └── server.js        # Main entry point
+│   └── uploads/videos/      # Uploaded videos
 ├── frontend/
 │   ├── src/
-│   │   ├── components/      # UI bileşenleri
-│   │   ├── context/         # Auth ve Socket context
-│   │   ├── hooks/           # Custom hooklar
-│   │   ├── pages/           # Sayfa bileşenleri
-│   │   ├── services/        # API servisleri
+│   │   ├── components/      # UI components
+│   │   ├── context/         # Auth and Socket context
+│   │   ├── hooks/           # Custom hooks
+│   │   ├── pages/           # Page components
+│   │   ├── services/        # API services
+│   │   ├── App.jsx          # Main app + routing
+│   │   └── main.jsx         # Entry point
+│   └── public/
+└── README.md
+```
+
+## Deployment
+
+### Frontend - Vercel
+1. Connect your GitHub repo to Vercel
+2. Root directory: `frontend`
+3. Build command: `npm run build`
+4. Output: `dist`
+5. Add environment variables
+
+### Backend - Render
+1. Create a new Web Service on Render
+2. Root directory: `backend`
+3. Build command: `npm install`
+4. Start command: `npm start`
+5. Add environment variables
+
+### Database - MongoDB Atlas
+1. Create a free M0 cluster on Atlas
+2. Add the connection string to backend `.env`
+
+## License
+
+MIT
 │   │   ├── App.jsx          # Ana uygulama + routing
 │   │   └── main.jsx         # Entry point
 │   └── public/

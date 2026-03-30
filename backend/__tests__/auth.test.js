@@ -12,7 +12,7 @@ const errorHandler = require('../src/middleware/errorHandler');
 let mongoServer;
 let app;
 
-// Test uygulaması oluştur
+// Create test application
 beforeAll(async () => {
   mongoServer = await MongoMemoryServer.create();
   const uri = mongoServer.getUri();
@@ -34,9 +34,9 @@ afterEach(async () => {
   await User.deleteMany({});
 });
 
-// Kayıt testleri
+// Registration tests
 describe('POST /api/auth/register', () => {
-  it('yeni kullanıcı kaydı başarılı olmalı', async () => {
+  it('should successfully register a new user', async () => {
     const res = await request(app)
       .post('/api/auth/register')
       .send({
@@ -54,7 +54,7 @@ describe('POST /api/auth/register', () => {
     expect(res.body).toHaveProperty('refreshToken');
   });
 
-  it('aynı email ile tekrar kayıt yapılamamalı', async () => {
+  it('should not allow registration with the same email', async () => {
     await User.create({
       username: 'existing',
       email: 'test@example.com',
@@ -72,7 +72,7 @@ describe('POST /api/auth/register', () => {
     expect(res.statusCode).toBe(400);
   });
 
-  it('eksik alanlarla kayıt yapılamamalı', async () => {
+  it('should not allow registration with missing fields', async () => {
     const res = await request(app)
       .post('/api/auth/register')
       .send({
@@ -83,7 +83,7 @@ describe('POST /api/auth/register', () => {
   });
 });
 
-// Giriş testleri
+// Login tests
 describe('POST /api/auth/login', () => {
   beforeEach(async () => {
     await request(app)
@@ -95,7 +95,7 @@ describe('POST /api/auth/login', () => {
       });
   });
 
-  it('doğru bilgilerle giriş başarılı olmalı', async () => {
+  it('should login successfully with correct credentials', async () => {
     const res = await request(app)
       .post('/api/auth/login')
       .send({
@@ -109,7 +109,7 @@ describe('POST /api/auth/login', () => {
     expect(res.body).toHaveProperty('refreshToken');
   });
 
-  it('yanlış şifre ile giriş yapılamamalı', async () => {
+  it('should not allow login with wrong password', async () => {
     const res = await request(app)
       .post('/api/auth/login')
       .send({
@@ -120,7 +120,7 @@ describe('POST /api/auth/login', () => {
     expect(res.statusCode).toBe(401);
   });
 
-  it('olmayan email ile giriş yapılamamalı', async () => {
+  it('should not allow login with non-existent email', async () => {
     const res = await request(app)
       .post('/api/auth/login')
       .send({
@@ -132,9 +132,9 @@ describe('POST /api/auth/login', () => {
   });
 });
 
-// Token yenileme testleri
+// Token refresh tests
 describe('POST /api/auth/refresh', () => {
-  it('geçerli refresh token ile yeni token alınabilmeli', async () => {
+  it('should get a new token with valid refresh token', async () => {
     const registerRes = await request(app)
       .post('/api/auth/register')
       .send({
@@ -153,7 +153,7 @@ describe('POST /api/auth/refresh', () => {
     expect(res.body).toHaveProperty('accessToken');
   });
 
-  it('geçersiz refresh token reddedilmeli', async () => {
+  it('should reject invalid refresh token', async () => {
     const res = await request(app)
       .post('/api/auth/refresh')
       .send({ refreshToken: 'invalid-token' });
@@ -162,9 +162,9 @@ describe('POST /api/auth/refresh', () => {
   });
 });
 
-// Mevcut kullanıcı bilgisi
+// Current user info
 describe('GET /api/auth/me', () => {
-  it('token ile kullanıcı bilgisi alınabilmeli', async () => {
+  it('should get user info with token', async () => {
     const registerRes = await request(app)
       .post('/api/auth/register')
       .send({
@@ -183,7 +183,7 @@ describe('GET /api/auth/me', () => {
     expect(res.body.user.email).toBe('test@example.com');
   });
 
-  it('token olmadan erişim reddedilmeli', async () => {
+  it('should deny access without token', async () => {
     const res = await request(app)
       .get('/api/auth/me');
 

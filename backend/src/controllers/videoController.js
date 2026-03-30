@@ -1,36 +1,36 @@
 /*
-  Video controller — yukleme, listeleme, streaming, guncelleme, silme
-  Multi-tenant yapi: her kullanici sadece kendi videolarina erisir (admin haric).
-  Streaming kismi HTTP range request destekler — buyuk videolarda parcali gonderim.
+  Video controller — upload, listing, streaming, update, delete
+  Multi-tenant architecture: each user can only access their own videos (except admin).
+  Streaming section supports HTTP range requests — partial delivery for large videos.
 */
 const Video = require('../models/Video');
 const { processVideo } = require('../services/videoProcessingService');
 const fs = require('fs');
 const path = require('path');
 
-// ---------- VIDEO YUKLEME ----------
-// multer middleware route'da tanimlanir, buraya geldiginde dosya zaten yuklenmis olur
+// ---------- VIDEO UPLOAD ----------
+// Multer middleware is defined on the route, file is already uploaded when reaching here
 const uploadVideo = async (req, res, next) => {
   try {
     if (!req.file) {
       return res.status(400).json({
         success: false,
-        message: 'Video dosyasi bulunamadi'
+        message: 'Video file not found'
       });
     }
 
     const { title, description, category, tags } = req.body;
 
     if (!title || title.trim().length === 0) {
-      // dosya yuklendiyse ama baslik yoksa dosyayi sil
+      // If file was uploaded but title is missing, delete the file
       fs.unlinkSync(req.file.path);
       return res.status(400).json({
         success: false,
-        message: 'Video basligi zorunlu'
+        message: 'Video title is required'
       });
     }
 
-    // yeni video kaydi olustur
+    // Create new video record
     const video = await Video.create({
       title: title.trim(),
       description: description ? description.trim() : '',
@@ -40,7 +40,7 @@ const uploadVideo = async (req, res, next) => {
       filepath: req.file.path,
       mimeType: req.file.mimetype,
       fileSize: req.file.size,
-      category: category || 'Genel',
+      category: category || 'General',
       tags: tags ? tags.split(',').map((t) => t.trim()) : [],
       status: 'uploading'
     });
@@ -48,15 +48,15 @@ const uploadVideo = async (req, res, next) => {
     res.status(201).json({
       success: true,
       video,
-      message: 'Video yuklendi, isleme basliyor...'
+      message: 'Video uploaded, processing starting...'
     });
 
-    // isleme arkaplanda baslat — response gittikten sonra
-    // io nesnesi server.js'den req'e eklenmis olmali
+    // Start processing in background — after response is sent
+    // io object should be attached to req from server.js
     const io = req.app.get('io');
     processVideo(video._id, io, req.user._id.toString());
   } catch (error) {
-    // hata olursa yuklenen dosyayi temizle
+    // If error occurs, clean up uploaded file
     if (req.file && fs.existsSync(req.file.path)) {
       fs.unlinkSync(req.file.path);
     }
@@ -64,13 +64,13 @@ const uploadVideo = async (req, res, next) => {
   }
 };
 
-// ---------- KULLANICININ VIDEOLARI ----------
-// multi-tenant: sadece kendi videolarini getirir
+// ---------- USER'S VIDEOS ----------
+// Multi-tenant: only returns the user's own videos
 const getMyVideos = async (req, res, next) => {
   try {
     const { status, sensitivity, search, sortBy, page = 1, limit = 12 } = req.query;
 
-    // filtre objesi olustur
+    // Build filter object
     const filter = { uploader: req.user._id };
 
     if (status && status !== 'all') {
@@ -86,8 +86,8 @@ const getMyVideos = async (req, res, next) => {
       ];
     }
 
-    // siralama
-    let sort = { createdAt: -1 }; // varsayilan: en yeniler once
+    // Sorting
+    let sort = { createdAt: -1 }; // Default: newest first
     if (sortBy === 'oldest') sort = { createdAt: 1 };
     if (sortBy === 'title') sort = { title: 1 };
     if (sortBy === 'size') sort = { fileSize: -1 };
@@ -114,7 +114,7 @@ const getMyVideos = async (req, res, next) => {
   }
 };
 
-// ---------- TUM VIDEOLAR (ADMIN) ----------
+// ---------- ALL VIDEOS (ADMIN) ----------
 const getAllVideos = async (req, res, next) => {
   try {
     const { status, sensitivity, search, page = 1, limit = 20 } = req.query;
@@ -155,7 +155,7 @@ const getAllVideos = async (req, res, next) => {
   }
 };
 
-// ---------- TEK VIDEO DETAY ----------
+// ---------- SINGLE VIDEO DETAIL ----------
 const getVideoById = async (req, res, next) => {
   try {
     const video = await Video.findById(req.params.id).populate('uploader', 'username');
@@ -163,18 +163,18 @@ const getVideoById = async (req, res, next) => {
     if (!video) {
       return res.status(404).json({
         success: false,
-        message: 'Video bulunamadi'
+        message: 'Video not found'
       });
     }
 
-    // video sahibi degilse ve admin degilse erisim engelle
+    // If not the video owner and not admin, deny access
     if (
       video.uploader._id.toString() !== req.user._id.toString() &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({
         success: false,
-        message: 'Bu videoya erisim yetkiniz yok'
+        message: 'You do not have permission to access this video'
       });
     }
 
@@ -184,7 +184,7 @@ const getVideoById = async (req, res, next) => {
   }
 };
 
-// ---------- VIDEO GUNCELLEME ----------
+// ---------- VIDEO UPDATE ----------
 const updateVideo = async (req, res, next) => {
   try {
     const video = await Video.findById(req.params.id);
@@ -192,18 +192,18 @@ const updateVideo = async (req, res, next) => {
     if (!video) {
       return res.status(404).json({
         success: false,
-        message: 'Video bulunamadi'
+        message: 'Video not found'
       });
     }
 
-    // sahiplik kontrolu — admin her seyi guncelleyebilir
+    // Ownership check — admin can update anything
     if (
       video.uploader.toString() !== req.user._id.toString() &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({
         success: false,
-        message: 'Bu videoyu duzenleme yetkiniz yok'
+        message: 'You do not have permission to edit this video'
       });
     }
 
@@ -222,7 +222,7 @@ const updateVideo = async (req, res, next) => {
   }
 };
 
-// ---------- VIDEO SILME ----------
+// ---------- VIDEO DELETE ----------
 const deleteVideo = async (req, res, next) => {
   try {
     const video = await Video.findById(req.params.id);
@@ -230,22 +230,22 @@ const deleteVideo = async (req, res, next) => {
     if (!video) {
       return res.status(404).json({
         success: false,
-        message: 'Video bulunamadi'
+        message: 'Video not found'
       });
     }
 
-    // sahiplik kontrolu
+    // Ownership check
     if (
       video.uploader.toString() !== req.user._id.toString() &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({
         success: false,
-        message: 'Bu videoyu silme yetkiniz yok'
+        message: 'You do not have permission to delete this video'
       });
     }
 
-    // oncelikle dosyayi diskten sil
+    // First delete the file from disk
     const filePath = path.resolve(video.filepath);
     if (fs.existsSync(filePath)) {
       fs.unlinkSync(filePath);
@@ -253,15 +253,15 @@ const deleteVideo = async (req, res, next) => {
 
     await Video.findByIdAndDelete(req.params.id);
 
-    res.json({ success: true, message: 'Video silindi' });
+    res.json({ success: true, message: 'Video deleted' });
   } catch (error) {
     next(error);
   }
 };
 
 // ---------- VIDEO STREAMING ----------
-// HTTP range request destegi ile parcali video gonderimi
-// tarayici otomatik olarak range header gonderir, biz de 206 ile cevap veririz
+// Partial video delivery with HTTP range request support
+// Browser automatically sends range header, and we respond with 206
 const streamVideo = async (req, res, next) => {
   try {
     const video = await Video.findById(req.params.id);
@@ -269,18 +269,18 @@ const streamVideo = async (req, res, next) => {
     if (!video) {
       return res.status(404).json({
         success: false,
-        message: 'Video bulunamadi'
+        message: 'Video not found'
       });
     }
 
-    // erisim kontrolu
+    // Access control
     if (
       video.uploader.toString() !== req.user._id.toString() &&
       req.user.role !== 'admin'
     ) {
       return res.status(403).json({
         success: false,
-        message: 'Bu videoya erisim yetkiniz yok'
+        message: 'You do not have permission to access this video'
       });
     }
 
@@ -288,7 +288,7 @@ const streamVideo = async (req, res, next) => {
     if (!fs.existsSync(filePath)) {
       return res.status(404).json({
         success: false,
-        message: 'Video dosyasi bulunamadi'
+        message: 'Video file not found on server'
       });
     }
 
@@ -297,14 +297,14 @@ const streamVideo = async (req, res, next) => {
     const range = req.headers.range;
 
     if (range) {
-      // range header var — parcali gonder (206 Partial Content)
+      // Range header present — send partial content (206 Partial Content)
       const parts = range.replace(/bytes=/, '').split('-');
       const start = parseInt(parts[0], 10);
-      // bitis belirtilmemisse 1MB'lik parca gonder
+      // If end not specified, send 1MB chunk
       const end = parts[1] ? parseInt(parts[1], 10) : Math.min(start + 1024 * 1024, fileSize - 1);
 
       if (start >= fileSize || start < 0) {
-        // gecersiz range — 416 don
+        // Invalid range — return 416
         res.status(416).set('Content-Range', `bytes */${fileSize}`);
         return res.end();
       }
@@ -324,13 +324,13 @@ const streamVideo = async (req, res, next) => {
       stream.pipe(res);
 
       stream.on('error', (err) => {
-        console.error('Stream hatasi:', err.message);
+        console.error('Stream error:', err.message);
         if (!res.headersSent) {
           res.status(500).end();
         }
       });
     } else {
-      // range yok — tum dosyayi gonder (kucuk videolar icin veya ilk istek)
+      // No range — send entire file (for small videos or initial request)
       res.set({
         'Content-Length': fileSize,
         'Content-Type': video.mimeType,
@@ -340,7 +340,7 @@ const streamVideo = async (req, res, next) => {
       fs.createReadStream(filePath).pipe(res);
     }
 
-    // izlenme sayacini guncelle — async, response'u beklettirmeye gerek yok
+    // Update view count — async, no need to block the response
     Video.findByIdAndUpdate(req.params.id, { $inc: { views: 1 } }).exec();
   } catch (error) {
     next(error);

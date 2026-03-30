@@ -1,9 +1,9 @@
 /*
-  Yardimci fonksiyonlar
-  Dosya boyutunu okunabilir formata cevirme vb. kucuk isler
+  Helper functions
+  Small utilities like converting file size to readable format
 */
 
-// byte degerini okunabilir string'e cevir (2.4 MB, 150 KB gibi)
+// Convert byte value to readable string (2.4 MB, 150 KB, etc.)
 function formatFileSize(bytes) {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -12,7 +12,7 @@ function formatFileSize(bytes) {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
-// saniye degerini dakika:saniye formatina cevir
+// Convert seconds value to minutes:seconds format
 function formatDuration(seconds) {
   if (!seconds) return '0:00';
   const mins = Math.floor(seconds / 60);

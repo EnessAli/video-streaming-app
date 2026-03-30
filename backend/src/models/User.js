@@ -1,8 +1,8 @@
 /*
-  Kullanici modeli
-  Kayit, giris ve yetkilendirme islemlerinde kullanilir.
-  Roller: viewer (sadece izleme), editor (yukleme+duzenleme), admin (tam yetki)
-  Sifre bcrypt ile hashlenir, refresh token'lar dizide tutulur
+  User model
+  Used for registration, login and authorization operations.
+  Roles: viewer (watch only), editor (upload+edit), admin (full access)
+  Password is hashed with bcrypt, refresh tokens are stored in an array
 */
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -11,31 +11,31 @@ const userSchema = new mongoose.Schema(
   {
     username: {
       type: String,
-      required: [true, 'Kullanici adi zorunlu'],
+      required: [true, 'Username is required'],
       unique: true,
       trim: true,
-      minlength: [3, 'Kullanici adi en az 3 karakter olmali'],
-      maxlength: [30, 'Kullanici adi en fazla 30 karakter olabilir']
+      minlength: [3, 'Username must be at least 3 characters'],
+      maxlength: [30, 'Username can be at most 30 characters']
     },
     email: {
       type: String,
-      required: [true, 'Email zorunlu'],
+      required: [true, 'Email is required'],
       unique: true,
       lowercase: true,
-      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Gecerli bir email girin']
+      match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
     },
     password: {
       type: String,
-      required: [true, 'Sifre zorunlu'],
-      minlength: [6, 'Sifre en az 6 karakter olmali'],
-      select: false // sorgularda sifre donmez, acikca istenmedikce
+      required: [true, 'Password is required'],
+      minlength: [6, 'Password must be at least 6 characters'],
+      select: false // Password is not returned in queries unless explicitly requested
     },
     role: {
       type: String,
       enum: ['viewer', 'editor', 'admin'],
       default: 'editor'
     },
-    // refresh token'lari takip etmek icin — birden fazla cihazda acik olabilir
+    // Track refresh tokens — can be active on multiple devices
     refreshTokens: [
       {
         token: { type: String, required: true },
@@ -46,9 +46,9 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// kaydetmeden once sifreyi hashle
+// Hash password before saving
 userSchema.pre('save', async function (next) {
-  // sifre degismediyse tekrar hashleme
+  // Don't re-hash if password hasn't changed
   if (!this.isModified('password')) return next();
 
   const salt = await bcrypt.genSalt(12);
@@ -56,12 +56,12 @@ userSchema.pre('save', async function (next) {
   next();
 });
 
-// giriste sifre karsilastirmasi icin
+// For password comparison during login
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };
 
-// JSON'a cevirirken hassas bilgileri cikar
+// Remove sensitive information when converting to JSON
 userSchema.methods.toJSON = function () {
   const user = this.toObject();
   delete user.password;

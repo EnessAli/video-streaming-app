@@ -1,7 +1,7 @@
 /*
-  Socket Context — Socket.io baglantisi yonetimi
-  Auth oldugunda otomatik baglanir, kullaniciyla birlikte kopar.
-  Video processing eventlerini dinler ve state olarak paylaşir.
+  Socket Context — Socket.io connection management
+  Automatically connects when authenticated, disconnects on logout.
+  Listens for video processing events and shares state.
 */
 import { createContext, useState, useEffect, useCallback, useRef } from 'react';
 import { io } from 'socket.io-client';
@@ -14,12 +14,12 @@ const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5000';
 export function SocketProvider({ children }) {
   const { user, isAuthenticated } = useAuth();
   const [connected, setConnected] = useState(false);
-  // her video icin ayri progress bilgisi tut
+  // keep separate progress info for each video
   const [processingStatus, setProcessingStatus] = useState({});
   const socketRef = useRef(null);
 
   useEffect(() => {
-    // kullanici giris yapmissa socket baglantisi kur
+    // establish socket connection if user is authenticated
     if (!isAuthenticated) {
       if (socketRef.current) {
         socketRef.current.disconnect();
@@ -36,16 +36,16 @@ export function SocketProvider({ children }) {
     });
 
     socket.on('connect', () => {
-      console.log('Socket baglandi');
+      console.log('Socket connected');
       setConnected(true);
     });
 
     socket.on('disconnect', () => {
-      console.log('Socket koptu');
+      console.log('Socket disconnected');
       setConnected(false);
     });
 
-    // video isleme ilerlemesi — progress bar guncellenir
+    // video processing progress — updates progress bar
     socket.on('video:processing', (data) => {
       setProcessingStatus((prev) => ({
         ...prev,
@@ -57,26 +57,26 @@ export function SocketProvider({ children }) {
       }));
     });
 
-    // video isleme tamamlandi
+    // video processing completed
     socket.on('video:processed', (data) => {
       setProcessingStatus((prev) => ({
         ...prev,
         [data.videoId]: {
           progress: 100,
-          step: 'Tamamlandi',
+          step: 'Completed',
           status: 'ready',
           sensitivityStatus: data.sensitivityStatus
         }
       }));
     });
 
-    // video isleme hatasi
+    // video processing error
     socket.on('video:failed', (data) => {
       setProcessingStatus((prev) => ({
         ...prev,
         [data.videoId]: {
           progress: 0,
-          step: 'Hata olustu',
+          step: 'Error occurred',
           status: 'failed',
           error: data.error
         }
@@ -84,7 +84,7 @@ export function SocketProvider({ children }) {
     });
 
     socket.on('connect_error', (err) => {
-      console.error('Socket baglanti hatasi:', err.message);
+      console.error('Socket connection error:', err.message);
     });
 
     socketRef.current = socket;
@@ -95,7 +95,7 @@ export function SocketProvider({ children }) {
     };
   }, [isAuthenticated]);
 
-  // processing durumunu temizle — video sayfasindan cikinca
+  // clear processing status — when leaving video page
   const clearProcessingStatus = useCallback((videoId) => {
     setProcessingStatus((prev) => {
       const updated = { ...prev };

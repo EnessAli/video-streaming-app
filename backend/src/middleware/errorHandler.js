@@ -1,29 +1,29 @@
 /*
-  Global hata yakalama middleware'i
-  Tum route'lardan firlatilan hatalari yakalar,
-  hata tipine gore uygun HTTP kodu ve mesaj doner.
-  Multer hatalari (dosya boyutu vb) icin ozel handling var
+  Global error handling middleware
+  Catches all errors thrown from routes,
+  returns appropriate HTTP code and message based on error type.
+  Special handling for Multer errors (file size, etc.)
 */
 const errorHandler = (err, req, res, next) => {
-  console.error('Hata:', err.message);
+  console.error('Error:', err.message);
 
-  // multer dosya boyutu hatasi
+  // Multer file size error
   if (err.code === 'LIMIT_FILE_SIZE') {
     return res.status(400).json({
       success: false,
-      message: 'Dosya boyutu cok buyuk. Maksimum 100MB yuklenebilir'
+      message: 'File size is too large. Maximum upload size is 100MB'
     });
   }
 
-  // multer genel hata (yanlis dosya tipi vs)
-  if (err.message && err.message.includes('Gecersiz dosya tipi')) {
+  // Multer general error (wrong file type, etc.)
+  if (err.message && err.message.includes('Invalid file type')) {
     return res.status(400).json({
       success: false,
       message: err.message
     });
   }
 
-  // mongoose validation hatasi — form alanlari hatali doldurulmus
+  // Mongoose validation error — form fields filled incorrectly
   if (err.name === 'ValidationError') {
     const messages = Object.values(err.errors).map((e) => e.message);
     return res.status(400).json({
@@ -32,27 +32,27 @@ const errorHandler = (err, req, res, next) => {
     });
   }
 
-  // mongoose duplicate key — zaten kayitli email veya username
+  // Mongoose duplicate key — already registered email or username
   if (err.code === 11000) {
     const field = Object.keys(err.keyValue)[0];
     return res.status(400).json({
       success: false,
-      message: `Bu ${field} zaten kullaniliyor`
+      message: `This ${field} is already in use`
     });
   }
 
-  // mongoose cast error — gecersiz ObjectId formati
+  // Mongoose cast error — invalid ObjectId format
   if (err.name === 'CastError') {
     return res.status(400).json({
       success: false,
-      message: 'Gecersiz ID formati'
+      message: 'Invalid ID format'
     });
   }
 
-  // bilinmeyen hata
+  // Unknown error
   res.status(err.statusCode || 500).json({
     success: false,
-    message: err.message || 'Sunucu hatasi'
+    message: err.message || 'Server error'
   });
 };
 

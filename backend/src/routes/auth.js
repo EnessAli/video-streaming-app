@@ -1,6 +1,6 @@
 /*
-  Auth route'lari
-  Kayit, giris, token yenileme, cikis ve kullanici bilgisi endpointleri
+  Auth routes
+  Registration, login, token refresh, logout and user info endpoints
 */
 const express = require('express');
 const router = express.Router();

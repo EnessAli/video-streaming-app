@@ -1,6 +1,6 @@
 /*
-  Kullanici yonetimi route'lari — admin only
-  Listeleme, rol guncelleme ve silme endpointleri
+  User management routes — admin only
+  Listing, role update and delete endpoints
 */
 const express = require('express');
 const router = express.Router();
@@ -12,7 +12,7 @@ const {
   deleteUser
 } = require('../controllers/userController');
 
-// tum route'lar admin yetkisi gerektirir
+// All routes require admin authorization
 router.use(protect, authorize('admin'));
 
 router.get('/', getAllUsers);

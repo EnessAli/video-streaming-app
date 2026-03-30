@@ -1,25 +1,25 @@
 /*
-  Video karti — dashboard'da grid icinde gosterilir
-  Baslik, durum rozetleri, dosya boyutu ve tarih bilgisi icerir.
-  Tiklayinca video detay sayfasina gider
+  Video card — displayed in a grid on the dashboard
+  Includes title, status badges, file size and date info.
+  Navigates to video detail page on click
 */
 import { Link } from 'react-router-dom';
 import StatusBadge from '../common/StatusBadge';
 
 export default function VideoCard({ video, processingInfo }) {
-  // dosya boyutunu MB olarak goster
+  // show file size in MB
   const fileSize = video.fileSize
     ? `${(video.fileSize / 1024 / 1024).toFixed(1)} MB`
     : '';
 
-  // tarihi formatlı goster
-  const uploadDate = new Date(video.createdAt).toLocaleDateString('tr-TR', {
+  // format date
+  const uploadDate = new Date(video.createdAt).toLocaleDateString('en-US', {
     day: 'numeric',
     month: 'short',
     year: 'numeric'
   });
 
-  // eger video hala isleniyor ve socket'ten progress geliyorsa onu goster
+  // if video is still processing and socket sends progress, show it
   const currentStatus = processingInfo?.status || video.status;
   const currentSensitivity = processingInfo?.sensitivityStatus || video.sensitivityStatus;
   const progress = processingInfo?.progress || video.processingProgress;
@@ -29,11 +29,11 @@ export default function VideoCard({ video, processingInfo }) {
       to={`/video/${video._id}`}
       className="block bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow overflow-hidden"
     >
-      {/* video onizleme alani — gercek thumbnail yerine placeholder */}
+      {/* video preview area — placeholder instead of real thumbnail */}
       <div className="bg-gray-800 h-40 flex items-center justify-center relative">
         <span className="text-4xl">🎬</span>
 
-        {/* isleme sirasinda progress bar goster */}
+        {/* show progress bar during processing */}
         {currentStatus === 'processing' && (
           <div className="absolute bottom-0 left-0 right-0 bg-black/50 px-2 py-1">
             <div className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export default function VideoCard({ video, processingInfo }) {
         )}
       </div>
 
-      {/* kart icerik kismi */}
+      {/* card content section */}
       <div className="p-4">
         <h3 className="font-medium text-gray-900 truncate mb-2">{video.title}</h3>
 
@@ -65,7 +65,7 @@ export default function VideoCard({ video, processingInfo }) {
           <span>{uploadDate}</span>
         </div>
 
-        {video.category && video.category !== 'Genel' && (
+        {video.category && video.category !== 'General' && (
           <span className="inline-block mt-2 text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
             {video.category}
           </span>

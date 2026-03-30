@@ -1,4 +1,4 @@
-/* Video model ve yardımcı fonksiyon testleri */
+/* Video model and helper function tests */
 const mongoose = require('mongoose');
 const { MongoMemoryServer } = require('mongodb-memory-server');
 
@@ -24,7 +24,7 @@ afterEach(async () => {
   await User.deleteMany({});
 });
 
-// Video model testleri
+// Video model tests
 describe('Video Model', () => {
   let testUser;
 
@@ -36,10 +36,10 @@ describe('Video Model', () => {
     });
   });
 
-  it('geçerli verilerle video oluşturulabilmeli', async () => {
+  it('should create a video with valid data', async () => {
     const video = await Video.create({
       title: 'Test Video',
-      description: 'Bu bir test videosu',
+      description: 'This is a test video',
       uploader: testUser._id,
       originalFilename: 'video.mp4',
       filename: 'abc123.mp4',
@@ -54,7 +54,7 @@ describe('Video Model', () => {
     expect(video.isPublic).toBe(true);
   });
 
-  it('başlık olmadan video oluşturulamamalı', async () => {
+  it('should not create a video without title', async () => {
     try {
       await Video.create({
         uploader: testUser._id,
@@ -64,13 +64,13 @@ describe('Video Model', () => {
         mimeType: 'video/mp4',
         fileSize: 1024
       });
-      fail('Hata fırlatılmalıydı');
+      fail('Should have thrown an error');
     } catch (error) {
       expect(error).toBeInstanceOf(mongoose.Error.ValidationError);
     }
   });
 
-  it('video durumu güncellenebilmeli', async () => {
+  it('should be able to update video status', async () => {
     const video = await Video.create({
       title: 'Test Video',
       uploader: testUser._id,
@@ -92,7 +92,7 @@ describe('Video Model', () => {
     expect(updated.sensitivityScore).toBe(0.15);
   });
 
-  it('kullanıcının videolarını listeleyebilmeli', async () => {
+  it('should be able to list user videos', async () => {
     await Video.create([
       {
         title: 'Video 1',
@@ -119,9 +119,9 @@ describe('Video Model', () => {
   });
 });
 
-// User model testleri
+// User model tests
 describe('User Model', () => {
-  it('şifre hashlenmiş olarak kaydedilmeli', async () => {
+  it('should save password as hashed', async () => {
     const user = await User.create({
       username: 'testuser',
       email: 'test@example.com',
@@ -132,7 +132,7 @@ describe('User Model', () => {
     expect(user.password).toMatch(/^\$2[aby]?\$/);
   });
 
-  it('şifre doğrulama çalışmalı', async () => {
+  it('should validate password correctly', async () => {
     const user = await User.create({
       username: 'testuser',
       email: 'test@example.com',
@@ -146,7 +146,7 @@ describe('User Model', () => {
     expect(isWrong).toBe(false);
   });
 
-  it('toJSON hassas verileri gizlemeli', async () => {
+  it('toJSON should hide sensitive data', async () => {
     const user = await User.create({
       username: 'testuser',
       email: 'test@example.com',
@@ -158,7 +158,7 @@ describe('User Model', () => {
     expect(json).not.toHaveProperty('refreshTokens');
   });
 
-  it('varsayılan rol viewer olmalı', async () => {
+  it('default role should be viewer', async () => {
     const user = await User.create({
       username: 'testuser',
       email: 'test@example.com',
@@ -169,10 +169,10 @@ describe('User Model', () => {
   });
 });
 
-// Yardımcı fonksiyon testleri
+// Helper function tests
 describe('Helper Functions', () => {
   describe('formatFileSize', () => {
-    it('byte boyutunu okunabilir formata çevirmeli', () => {
+    it('should convert byte size to readable format', () => {
       expect(formatFileSize(0)).toBe('0 Bytes');
       expect(formatFileSize(1024)).toBe('1 KB');
       expect(formatFileSize(1048576)).toBe('1 MB');
@@ -181,7 +181,7 @@ describe('Helper Functions', () => {
   });
 
   describe('sanitizeFilename', () => {
-    it('tehlikeli karakterleri temizlemeli', () => {
+    it('should sanitize dangerous characters', () => {
       expect(sanitizeFilename('my video.mp4')).toBe('my_video.mp4');
       expect(sanitizeFilename('../hack.mp4')).toBe('hack.mp4');
       expect(sanitizeFilename('test<script>.mp4')).toBe('testscript.mp4');

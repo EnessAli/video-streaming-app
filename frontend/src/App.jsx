@@ -1,11 +1,11 @@
-/* App.jsx - Ana uygulama bileşeni, routing yapılandırması */
+/* App.jsx - Main application component, routing configuration */
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import Navbar from './components/layout/Navbar';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
-// Sayfa bileşenleri
+// Page components
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import DashboardPage from './pages/DashboardPage';
@@ -23,11 +23,11 @@ function App() {
             <Navbar />
             <main className="container mx-auto px-4 py-6">
               <Routes>
-                {/* Herkese açık rotalar */}
+                {/* Public routes */}
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />
 
-                {/* Giriş yapılması gereken rotalar */}
+                {/* Protected routes — requires login */}
                 <Route path="/" element={
                   <ProtectedRoute>
                     <DashboardPage />
@@ -49,7 +49,7 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Sadece admin */}
+                {/* Admin only */}
                 <Route path="/admin" element={
                   <ProtectedRoute roles={['admin']}>
                     <AdminPage />

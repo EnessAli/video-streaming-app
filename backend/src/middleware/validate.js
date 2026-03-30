@@ -1,7 +1,7 @@
 /*
-  Request dogrulama middleware'i
-  express-validator sonuclarini kontrol eder,
-  hata varsa 400 donup devam etmez
+  Request validation middleware
+  Checks express-validator results,
+  returns 400 if there are errors and does not continue
 */
 const { validationResult } = require('express-validator');
 

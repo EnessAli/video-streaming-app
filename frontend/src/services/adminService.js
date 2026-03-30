@@ -1,6 +1,6 @@
 /*
-  Admin servisi — kullanici yonetim islemleri
-  Sadece admin rolundeki kullanicilar icin
+  Admin service — user management operations
+  Only for users with admin role
 */
 import api from './api';
 

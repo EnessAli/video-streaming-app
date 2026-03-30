@@ -1,45 +1,45 @@
 /*
-  Video hassasiyet analizi servisi (simulasyon)
-  Gercek bir AI servisi yerine, video islemeyi simule eder:
-  - 0'dan 100'e kadar asamali ilerleme
-  - her adimda Socket.io ile frontend'e progress gonderir
-  - sonucta %80 ihtimalle "safe", %20 ihtimalle "flagged" olarak isaretler
+  Video sensitivity analysis service (simulation)
+  Instead of a real AI service, simulates video processing:
+  - Gradual progress from 0 to 100
+  - Sends progress to frontend via Socket.io at each step
+  - Results in "safe" with 80% probability, "flagged" with 20%
   
-  Gercek projede burasi bir AI API'sine (Google Video Intelligence,
-  AWS Rekognition vs) baglanir
+  In a real project, this would connect to an AI API (Google Video Intelligence,
+  AWS Rekognition, etc.)
 */
 const Video = require('../models/Video');
 
-// bu fonksiyon upload tamamlandiktan sonra cagirilir
+// This function is called after upload is complete
 async function processVideo(videoId, io, userId) {
   try {
-    // once videoyu "processing" durumuna al
+    // First set the video to "processing" status
     await Video.findByIdAndUpdate(videoId, {
       status: 'processing',
       processingProgress: 0
     });
 
-    // frontend'e islemenin basladigini bildir
+    // Notify frontend that processing has started
     io.to(`user:${userId}`).emit('video:processing', {
       videoId,
       progress: 0,
-      step: 'Dosya dogrulaniyor...'
+      step: 'Validating file...'
     });
 
-    // analiz asamalari — her biri farkli bir kontrol simule ediyor
+    // Analysis steps — each simulates a different check
     const steps = [
-      { progress: 10, step: 'Video dosyasi okunuyor...', delay: 800 },
-      { progress: 20, step: 'Frame analizi basladi...', delay: 1200 },
-      { progress: 35, step: 'Gorsel icerik taraniyor...', delay: 1500 },
-      { progress: 50, step: 'Ses analizi yapiliyor...', delay: 1000 },
-      { progress: 65, step: 'Metin tespiti kontrol ediliyor...', delay: 1300 },
-      { progress: 75, step: 'Hassas icerik filtreleniyor...', delay: 1100 },
-      { progress: 85, step: 'Sonuclar derleniyor...', delay: 900 },
-      { progress: 95, step: 'Son kontroller...', delay: 700 },
-      { progress: 100, step: 'Analiz tamamlandi', delay: 500 }
+      { progress: 10, step: 'Reading video file...', delay: 800 },
+      { progress: 20, step: 'Frame analysis started...', delay: 1200 },
+      { progress: 35, step: 'Scanning visual content...', delay: 1500 },
+      { progress: 50, step: 'Audio analysis in progress...', delay: 1000 },
+      { progress: 65, step: 'Checking text detection...', delay: 1300 },
+      { progress: 75, step: 'Filtering sensitive content...', delay: 1100 },
+      { progress: 85, step: 'Compiling results...', delay: 900 },
+      { progress: 95, step: 'Final checks...', delay: 700 },
+      { progress: 100, step: 'Analysis complete', delay: 500 }
     ];
 
-    // her adimi sirayla calistir ve progress bildir
+    // Run each step sequentially and report progress
     for (const s of steps) {
       await new Promise((resolve) => setTimeout(resolve, s.delay));
 
@@ -54,11 +54,11 @@ async function processVideo(videoId, io, userId) {
       });
     }
 
-    // rastgele sonuc — %80 safe, %20 flagged
+    // Random result — 80% safe, 20% flagged
     const isSafe = Math.random() < 0.8;
     const sensitivityStatus = isSafe ? 'safe' : 'flagged';
 
-    // videoyu guncelle — artik izlenmeye hazir
+    // Update video — now ready to watch
     const updatedVideo = await Video.findByIdAndUpdate(
       videoId,
       {
@@ -69,7 +69,7 @@ async function processVideo(videoId, io, userId) {
       { new: true }
     );
 
-    // sonucu frontend'e bildir
+    // Notify frontend of the result
     io.to(`user:${userId}`).emit('video:processed', {
       videoId,
       sensitivityStatus,
@@ -78,9 +78,9 @@ async function processVideo(videoId, io, userId) {
 
     return updatedVideo;
   } catch (error) {
-    console.error('Video isleme hatasi:', error.message);
+    console.error('Video processing error:', error.message);
 
-    // hata olursa videoyu failed olarak isaretle
+    // If error occurs, mark video as failed
     await Video.findByIdAndUpdate(videoId, {
       status: 'failed',
       processingProgress: 0
@@ -88,7 +88,7 @@ async function processVideo(videoId, io, userId) {
 
     io.to(`user:${userId}`).emit('video:failed', {
       videoId,
-      error: 'Video isleme sirasinda hata olustu'
+      error: 'An error occurred during video processing'
     });
   }
 }

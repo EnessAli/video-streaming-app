@@ -1,7 +1,7 @@
 /*
-  Giris sayfasi
-  Email ve sifre ile oturum acma formu.
-  Basarili giriste dashboard'a yonlendirir
+  Login page
+  Sign in form with email and password.
+  Redirects to dashboard on successful login
 */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -24,7 +24,7 @@ export default function LoginPage() {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Giris sirasinda bir hata olustu');
+      setError(err.response?.data?.message || 'An error occurred during login');
     } finally {
       setLoading(false);
     }
@@ -35,7 +35,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">🎬 VideoStream</h1>
-          <p className="text-gray-600 mt-2">Hesabınıza giriş yapın</p>
+          <p className="text-gray-600 mt-2">Sign in to your account</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-8">
@@ -56,13 +56,13 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="ornek@email.com"
+                placeholder="example@email.com"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Şifre
+                Password
               </label>
               <input
                 type="password"
@@ -80,14 +80,14 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Giriş yapılıyor...' : 'Giriş Yap'}
+              {loading ? 'Logging in...' : 'Login'}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Hesabınız yok mu?{' '}
+            Don't have an account?{' '}
             <Link to="/register" className="text-blue-600 hover:underline font-medium">
-              Kayıt Ol
+              Register
             </Link>
           </p>
         </div>

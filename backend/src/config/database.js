@@ -1,7 +1,7 @@
 /*
-  MongoDB veritabani baglantisi
-  Mongoose kullanarak Atlas cluster'a baglanir,
-  baglanti hatalarini loglar ve retry mekanizmasi uygular
+  MongoDB database connection
+  Connects to Atlas cluster using Mongoose,
+  logs connection errors and implements retry mechanism
 */
 const mongoose = require('mongoose');
 const config = require('./env');
@@ -9,21 +9,21 @@ const config = require('./env');
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(config.mongoUri);
-    console.log(`MongoDB baglandi: ${conn.connection.host}`);
+    console.log(`MongoDB connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`MongoDB baglanti hatasi: ${error.message}`);
-    // 5 saniye sonra tekrar dene
+    console.error(`MongoDB connection error: ${error.message}`);
+    // Retry after 5 seconds
     setTimeout(connectDB, 5000);
   }
 };
 
-// baglanti kopma durumunda loglama
+// Log on disconnection
 mongoose.connection.on('disconnected', () => {
-  console.log('MongoDB baglantisi koptu');
+  console.log('MongoDB disconnected');
 });
 
 mongoose.connection.on('error', (err) => {
-  console.error(`MongoDB hata: ${err.message}`);
+  console.error(`MongoDB error: ${err.message}`);
 });
 
 module.exports = connectDB;

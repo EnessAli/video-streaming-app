@@ -1,6 +1,6 @@
 /*
-  Auth servisi — kayit, giris, cikis ve token islemleri
-  Tum auth API cagrilerini tek yerden yonetir
+  Auth service — register, login, logout and token operations
+  Manages all auth API calls from a single place
 */
 import api from './api';
 
@@ -25,7 +25,7 @@ const authService = {
     try {
       await api.post('/auth/logout');
     } catch (err) {
-      // logout hatasi olsa bile local temizligi yap
+      // clean up locally even if logout request fails
     }
     localStorage.removeItem('accessToken');
   },

@@ -1,7 +1,7 @@
 /*
-  Ortam degiskenleri yapilandirmasi
-  .env dosyasindan degiskenleri yukler ve
-  uygulama genelinde kullanilacak config objesini olusturur
+  Environment variables configuration
+  Loads variables from .env file and
+  creates a config object used throughout the application
 */
 require('dotenv').config();
 

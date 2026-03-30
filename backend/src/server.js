@@ -1,7 +1,7 @@
 /*
-  Ana sunucu dosyasi
-  Express uygulamasini, HTTP sunucusunu ve Socket.io'yu baslatir.
-  Middleware zincirleri, route tanimlari ve hata yakalama burada.
+  Main server file
+  Starts the Express application, HTTP server and Socket.io.
+  Middleware chains, route definitions and error handling are here.
 */
 const express = require('express');
 const http = require('http');
@@ -17,27 +17,27 @@ const connectDB = require('./config/database');
 const initializeSocket = require('./socket');
 const errorHandler = require('./middleware/errorHandler');
 
-// route dosyalari
+// Route files
 const authRoutes = require('./routes/auth');
 const videoRoutes = require('./routes/videos');
 const userRoutes = require('./routes/users');
 
-// express uygulamasi
+// Express application
 const app = express();
 const server = http.createServer(app);
 
-// socket.io baslat ve app'e ekle — controller'lardan erisilebilsin
+// Start socket.io and attach to app — accessible from controllers
 const io = initializeSocket(server);
 app.set('io', io);
 
-// ---------- MIDDLEWARE ZINCIRI ----------
+// ---------- MIDDLEWARE CHAIN ----------
 
-// guvenlik header'lari
+// Security headers
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
 
-// CORS — frontend'den gelen istekleri kabul et
+// CORS — allow requests from frontend
 const allowedOrigins = [
   config.frontendUrl,
   'http://localhost:5173',
@@ -46,11 +46,13 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
-    // sunucu-tarafli istekler (origin yok) veya izinli originler
-    if (!origin || allowedOrigins.includes(origin)) {
+    // allow server-side requests (no origin) or matching origins
+    if (!origin) return callback(null, true);
+    // allow exact match or any vercel preview deploy
+    if (allowedOrigins.includes(origin) || origin.endsWith('.vercel.app')) {
       callback(null, true);
     } else {
-      callback(new Error('CORS izni yok: ' + origin));
+      callback(new Error('CORS not allowed: ' + origin));
     }
   },
   credentials: true,
@@ -58,55 +60,55 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// istek loglama — development'ta detayli, production'da kisa
+// Request logging — detailed in development, short in production
 app.use(morgan(config.nodeEnv === 'development' ? 'dev' : 'combined'));
 
-// JSON ve cookie parse
+// JSON and cookie parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// rate limiting — brute force korunmasi
+// Rate limiting — brute force protection
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 dakika
-  max: 100, // IP basina 100 istek
-  message: { success: false, message: 'Cok fazla istek gonderdiniz, 15 dakika sonra tekrar deneyin' }
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // 100 requests per IP
+  message: { success: false, message: 'Too many requests, please try again in 15 minutes' }
 });
 app.use('/api/', limiter);
 
-// auth endpointleri icin daha siki limit
+// Stricter limit for auth endpoints
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: { success: false, message: 'Cok fazla giris denemesi, 15 dakika sonra tekrar deneyin' }
+  message: { success: false, message: 'Too many login attempts, please try again in 15 minutes' }
 });
 app.use('/api/auth', authLimiter);
 
-// ---------- ROUTE TANIMLARI ----------
+// ---------- ROUTE DEFINITIONS ----------
 app.use('/api/auth', authRoutes);
 app.use('/api/videos', videoRoutes);
 app.use('/api/users', userRoutes);
 
-// saglik kontrolu
+// Health check
 app.get('/api/health', (req, res) => {
-  res.json({ success: true, message: 'Sunucu calisiyor', timestamp: new Date() });
+  res.json({ success: true, message: 'Server is running', timestamp: new Date() });
 });
 
-// ---------- HATA YAKALAMA ----------
-// tanimlanmamis route
+// ---------- ERROR HANDLING ----------
+// Undefined route
 app.use((req, res, next) => {
-  res.status(404).json({ success: false, message: 'Endpoint bulunamadi' });
+  res.status(404).json({ success: false, message: 'Endpoint not found' });
 });
 
-// global hata handler — tum hatalar buraya duser
+// Global error handler — all errors fall through to here
 app.use(errorHandler);
 
-// ---------- SUNUCUYU BASLAT ----------
+// ---------- START SERVER ----------
 const PORT = config.port;
 
 connectDB().then(() => {
   server.listen(PORT, () => {
-    console.log(`Sunucu ${PORT} portunda calisiyor (${config.nodeEnv})`);
+    console.log(`Server running on port ${PORT} (${config.nodeEnv})`);
     console.log(`Frontend URL: ${config.frontendUrl}`);
   });
 });

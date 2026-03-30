@@ -1,7 +1,7 @@
 /*
-  Auth Context — uygulama genelinde kullanici durumu yonetimi
-  Giris, kayit, cikis islemlerini ve mevcut kullanici bilgisini saglar.
-  Sayfa yenilendiginde token varsa otomatik olarak kullaniciyi getirir.
+  Auth Context — manages user state across the application
+  Provides login, register, logout actions and current user info.
+  Automatically fetches user on page reload if token exists.
 */
 import { createContext, useState, useEffect, useCallback } from 'react';
 import authService from '../services/authService';
@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // sayfa yuklendiginde mevcut oturumu kontrol et
+  // check existing session on page load
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem('accessToken');
@@ -25,7 +25,7 @@ export function AuthProvider({ children }) {
         const data = await authService.getMe();
         setUser(data.user);
       } catch (err) {
-        // token gecersizse temizle
+        // clear if token is invalid
         localStorage.removeItem('accessToken');
         setUser(null);
       } finally {

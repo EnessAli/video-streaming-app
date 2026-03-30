@@ -1,8 +1,8 @@
 /*
-  Video modeli
-  Yuklenen videolarin metadata bilgilerini tutar: baslik, aciklama, dosya bilgileri,
-  isleme durumu (uploading/processing/ready/failed) ve hassasiyet sonucu (pending/safe/flagged).
-  Her video bir kullaniciya (uploader) aittir — multi-tenant yapi icin
+  Video model
+  Stores metadata of uploaded videos: title, description, file info,
+  processing status (uploading/processing/ready/failed) and sensitivity result (pending/safe/flagged).
+  Each video belongs to a user (uploader) — for multi-tenant architecture
 */
 const mongoose = require('mongoose');
 
@@ -10,33 +10,33 @@ const videoSchema = new mongoose.Schema(
   {
     title: {
       type: String,
-      required: [true, 'Video basligi zorunlu'],
+      required: [true, 'Video title is required'],
       trim: true,
-      maxlength: [100, 'Baslik en fazla 100 karakter olabilir']
+      maxlength: [100, 'Title can be at most 100 characters']
     },
     description: {
       type: String,
       trim: true,
-      maxlength: [2000, 'Aciklama en fazla 2000 karakter olabilir'],
+      maxlength: [2000, 'Description can be at most 2000 characters'],
       default: ''
     },
-    // videoyu yukleyen kullanici — her sorgu buna gore filtrelenir
+    // User who uploaded the video — every query is filtered by this
     uploader: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
       required: true
     },
-    // orijinal dosya adi — kullaniciya gostermek icin
+    // Original file name — for displaying to user
     originalName: {
       type: String,
       required: true
     },
-    // sunucudaki dosya adi — uuid ile olusturulmus benzersiz isim
+    // File name on server — unique name generated with uuid
     filename: {
       type: String,
       required: true
     },
-    // dosyanin tam yolu
+    // Full path of the file
     filepath: {
       type: String,
       required: true
@@ -45,40 +45,40 @@ const videoSchema = new mongoose.Schema(
       type: String,
       required: true
     },
-    // dosya boyutu byte cinsinden
+    // File size in bytes
     fileSize: {
       type: Number,
       required: true
     },
-    // video suresi saniye cinsinden — isleme sirasinda hesaplanir
+    // Video duration in seconds — calculated during processing
     duration: {
       type: Number,
       default: null
     },
-    // videonun genel durumu
+    // Overall status of the video
     status: {
       type: String,
       enum: ['uploading', 'processing', 'ready', 'failed'],
       default: 'uploading'
     },
-    // hassasiyet analizi sonucu
+    // Sensitivity analysis result
     sensitivityStatus: {
       type: String,
       enum: ['pending', 'safe', 'flagged'],
       default: 'pending'
     },
-    // isleme ilerleme yuzdesi — socket.io ile frontend'e gonderilir
+    // Processing progress percentage — sent to frontend via socket.io
     processingProgress: {
       type: Number,
       default: 0,
       min: 0,
       max: 100
     },
-    // kullanici tanimlı kategori
+    // User-defined category
     category: {
       type: String,
       trim: true,
-      default: 'Genel'
+      default: 'General'
     },
     tags: [{ type: String, trim: true }],
     views: {
@@ -89,7 +89,7 @@ const videoSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// sik kullanilan sorgular icin indexler
+// Indexes for frequently used queries
 videoSchema.index({ uploader: 1, createdAt: -1 });
 videoSchema.index({ sensitivityStatus: 1 });
 videoSchema.index({ status: 1 });

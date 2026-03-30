@@ -1,13 +1,13 @@
 /*
-  Token servisi — JWT islemleri
-  Access token (kisa omurlu, 15dk) ve refresh token (uzun omurlu, 7 gun)
-  ciftini olusturur. Refresh token DB'de saklanir, cihaz basina ayri token olur.
+  Token service — JWT operations
+  Creates access token (short-lived, 15min) and refresh token (long-lived, 7 days)
+  pair. Refresh token is stored in DB, separate token per device.
 */
 const jwt = require('jsonwebtoken');
 const config = require('../config/env');
 const User = require('../models/User');
 
-// access + refresh token cifti olustur
+// Generate access + refresh token pair
 function generateTokens(userId) {
   const accessToken = jwt.sign(
     { id: userId },
@@ -24,7 +24,7 @@ function generateTokens(userId) {
   return { accessToken, refreshToken };
 }
 
-// refresh token'i kullanicinin DB kaydina ekle
+// Add refresh token to user's DB record
 async function saveRefreshToken(userId, refreshToken) {
   const decoded = jwt.decode(refreshToken);
 
@@ -37,7 +37,7 @@ async function saveRefreshToken(userId, refreshToken) {
     }
   });
 
-  // en fazla 5 refresh token tut — eski cihazlarin token'lari dussun
+  // Keep at most 5 refresh tokens — older device tokens get dropped
   const user = await User.findById(userId);
   if (user.refreshTokens.length > 5) {
     user.refreshTokens = user.refreshTokens.slice(-5);
@@ -45,33 +45,33 @@ async function saveRefreshToken(userId, refreshToken) {
   }
 }
 
-// refresh token gecerli mi kontrol et
+// Check if refresh token is valid
 async function verifyRefreshToken(refreshToken) {
-  // once JWT imzasini dogrula
+  // First verify the JWT signature
   const decoded = jwt.verify(refreshToken, config.refreshTokenSecret);
 
-  // sonra DB'de var mi bak — cikis yapildiysa silinmis olur
+  // Then check if it exists in DB — it would be deleted if logged out
   const user = await User.findById(decoded.id);
   if (!user) {
-    throw new Error('Kullanici bulunamadi');
+    throw new Error('User not found');
   }
 
   const tokenExists = user.refreshTokens.some((rt) => rt.token === refreshToken);
   if (!tokenExists) {
-    throw new Error('Refresh token gecersiz veya iptal edilmis');
+    throw new Error('Refresh token is invalid or has been revoked');
   }
 
   return decoded;
 }
 
-// cikis yapildiginda refresh token'i DB'den sil
+// Delete refresh token from DB on logout
 async function revokeRefreshToken(userId, refreshToken) {
   await User.findByIdAndUpdate(userId, {
     $pull: { refreshTokens: { token: refreshToken } }
   });
 }
 
-// tum refresh token'lari sil — sifre degisikligi gibi durumlarda
+// Delete all refresh tokens — for cases like password change
 async function revokeAllTokens(userId) {
   await User.findByIdAndUpdate(userId, {
     $set: { refreshTokens: [] }

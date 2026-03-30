@@ -1,11 +1,11 @@
 /*
-  Video servisi — video CRUD islemleri ve yukleme
-  Upload sirasinda progress callback destegi var
+  Video service — video CRUD operations and upload
+  Supports progress callback during upload
 */
 import api from './api';
 
 const videoService = {
-  // video yukle — onUploadProgress ile ilerleme takibi
+  // upload video — progress tracking via onUploadProgress
   async upload(formData, onProgress) {
     const { data } = await api.post('/videos/upload', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -19,37 +19,37 @@ const videoService = {
     return data;
   },
 
-  // kullanicinin kendi videolari
+  // current user's own videos
   async getMyVideos(params = {}) {
     const { data } = await api.get('/videos', { params });
     return data;
   },
 
-  // admin icin tum videolar
+  // all videos for admin
   async getAllVideos(params = {}) {
     const { data } = await api.get('/videos/all', { params });
     return data;
   },
 
-  // tek video detay
+  // single video detail
   async getVideo(id) {
     const { data } = await api.get(`/videos/${id}`);
     return data;
   },
 
-  // video guncelle
+  // update video
   async updateVideo(id, updates) {
     const { data } = await api.put(`/videos/${id}`, updates);
     return data;
   },
 
-  // video sil
+  // delete video
   async deleteVideo(id) {
     const { data } = await api.delete(`/videos/${id}`);
     return data;
   },
 
-  // streaming URL olustur
+  // generate streaming URL
   getStreamUrl(id) {
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     const token = localStorage.getItem('accessToken');

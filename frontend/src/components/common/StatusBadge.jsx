@@ -1,18 +1,18 @@
 /*
-  Durum rozeti — video durumunu renk koduyla gosterir
-  safe: yesil, flagged: kirmizi, processing: sari, pending: gri, failed: kirmizi
+  Status badge — shows video status with color coding
+  safe: green, flagged: red, processing: yellow, pending: gray, failed: red
 */
 export default function StatusBadge({ status, type = 'status' }) {
   const configs = {
-    // video isleme durumu
-    uploading: { label: 'Yükleniyor', color: 'bg-blue-100 text-blue-700' },
-    processing: { label: 'İşleniyor', color: 'bg-yellow-100 text-yellow-700' },
-    ready: { label: 'Hazır', color: 'bg-green-100 text-green-700' },
-    failed: { label: 'Hata', color: 'bg-red-100 text-red-700' },
-    // hassasiyet durumu
-    pending: { label: 'Bekliyor', color: 'bg-gray-100 text-gray-700' },
-    safe: { label: 'Güvenli', color: 'bg-green-100 text-green-700' },
-    flagged: { label: 'İşaretli', color: 'bg-red-100 text-red-700' }
+    // video processing status
+    uploading: { label: 'Uploading', color: 'bg-blue-100 text-blue-700' },
+    processing: { label: 'Processing', color: 'bg-yellow-100 text-yellow-700' },
+    ready: { label: 'Ready', color: 'bg-green-100 text-green-700' },
+    failed: { label: 'Error', color: 'bg-red-100 text-red-700' },
+    // sensitivity status
+    pending: { label: 'Pending', color: 'bg-gray-100 text-gray-700' },
+    safe: { label: 'Safe', color: 'bg-green-100 text-green-700' },
+    flagged: { label: 'Flagged', color: 'bg-red-100 text-red-700' }
   };
 
   const config = configs[status] || { label: status, color: 'bg-gray-100 text-gray-700' };

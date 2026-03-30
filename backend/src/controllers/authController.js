@@ -1,7 +1,7 @@
 /*
-  Auth controller — kayit, giris, token yenileme ve cikis islemleri
-  JWT access token + refresh token cifti ile calisir.
-  Token'lar hem response body'de hem HTTP-only cookie olarak gonderilir
+  Auth controller — registration, login, token refresh and logout operations
+  Works with JWT access token + refresh token pair.
+  Tokens are sent both in response body and as HTTP-only cookies
 */
 const { body } = require('express-validator');
 const User = require('../models/User');
@@ -14,7 +14,7 @@ const {
   revokeAllTokens
 } = require('../services/tokenService');
 
-// cookie ayarlari — production'da secure true olur
+// Cookie settings — secure is true in production
 const cookieOptions = (maxAge) => ({
   httpOnly: true,
   secure: process.env.NODE_ENV === 'production',
@@ -22,19 +22,19 @@ const cookieOptions = (maxAge) => ({
   maxAge
 });
 
-// ---------- KAYIT ----------
+// ---------- REGISTER ----------
 const registerValidation = [
   body('username')
     .trim()
     .isLength({ min: 3, max: 30 })
-    .withMessage('Kullanici adi 3-30 karakter olmali'),
+    .withMessage('Username must be 3-30 characters'),
   body('email')
     .isEmail()
     .normalizeEmail()
-    .withMessage('Gecerli bir email girin'),
+    .withMessage('Please enter a valid email'),
   body('password')
     .isLength({ min: 6 })
-    .withMessage('Sifre en az 6 karakter olmali'),
+    .withMessage('Password must be at least 6 characters'),
   validate
 ];
 
@@ -42,7 +42,7 @@ const register = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
 
-    // email veya username daha once alinmis mi
+    // Check if email or username is already taken
     const existingUser = await User.findOne({
       $or: [{ email }, { username }]
     });
@@ -51,20 +51,20 @@ const register = async (req, res, next) => {
         success: false,
         message:
           existingUser.email === email
-            ? 'Bu email zaten kayitli'
-            : 'Bu kullanici adi zaten alinmis'
+            ? 'This email is already registered'
+            : 'This username is already taken'
       });
     }
 
     const user = await User.create({ username, email, password });
 
-    // token cifti olustur ve refresh token'i DB'ye kaydet
+    // Generate token pair and save refresh token to DB
     const { accessToken, refreshToken } = generateTokens(user._id);
     await saveRefreshToken(user._id, refreshToken);
 
-    // cookie'lere yaz
-    res.cookie('accessToken', accessToken, cookieOptions(15 * 60 * 1000)); // 15dk
-    res.cookie('refreshToken', refreshToken, cookieOptions(7 * 24 * 60 * 60 * 1000)); // 7 gun
+    // Write to cookies
+    res.cookie('accessToken', accessToken, cookieOptions(15 * 60 * 1000)); // 15min
+    res.cookie('refreshToken', refreshToken, cookieOptions(7 * 24 * 60 * 60 * 1000)); // 7 days
 
     res.status(201).json({
       success: true,
@@ -76,10 +76,10 @@ const register = async (req, res, next) => {
   }
 };
 
-// ---------- GIRIS ----------
+// ---------- LOGIN ----------
 const loginValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Gecerli bir email girin'),
-  body('password').notEmpty().withMessage('Sifre gerekli'),
+  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
+  body('password').notEmpty().withMessage('Password is required'),
   validate
 ];
 
@@ -87,12 +87,12 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
-    // select('+password') ile sifre alanini da getir — normalde gelmez
+    // select('+password') to also fetch password field — normally excluded
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Email veya sifre hatali'
+        message: 'Invalid email or password'
       });
     }
 
@@ -100,7 +100,7 @@ const login = async (req, res, next) => {
     if (!isMatch) {
       return res.status(401).json({
         success: false,
-        message: 'Email veya sifre hatali'
+        message: 'Invalid email or password'
       });
     }
 
@@ -120,8 +120,8 @@ const login = async (req, res, next) => {
   }
 };
 
-// ---------- TOKEN YENILEME ----------
-// access token suresi dolunca frontend buraya istek atar
+// ---------- TOKEN REFRESH ----------
+// Frontend calls this when access token expires
 const refresh = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken || req.body.refreshToken;
@@ -129,13 +129,13 @@ const refresh = async (req, res, next) => {
     if (!refreshToken) {
       return res.status(401).json({
         success: false,
-        message: 'Refresh token bulunamadi'
+        message: 'Refresh token not found'
       });
     }
 
     const decoded = await verifyRefreshToken(refreshToken);
 
-    // yeni access token olustur
+    // Generate new access token
     const { accessToken } = generateTokens(decoded.id);
 
     res.cookie('accessToken', accessToken, cookieOptions(15 * 60 * 1000));
@@ -147,12 +147,12 @@ const refresh = async (req, res, next) => {
   } catch (error) {
     return res.status(401).json({
       success: false,
-      message: 'Gecersiz refresh token — tekrar giris yapin'
+      message: 'Invalid refresh token — please log in again'
     });
   }
 };
 
-// ---------- CIKIS ----------
+// ---------- LOGOUT ----------
 const logout = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
@@ -163,13 +163,13 @@ const logout = async (req, res, next) => {
     res.clearCookie('accessToken');
     res.clearCookie('refreshToken');
 
-    res.json({ success: true, message: 'Basariyla cikis yapildi' });
+    res.json({ success: true, message: 'Successfully logged out' });
   } catch (error) {
     next(error);
   }
 };
 
-// ---------- MEVCUT KULLANICI BILGISI ----------
+// ---------- CURRENT USER INFO ----------
 const getMe = async (req, res) => {
   res.json({
     success: true,

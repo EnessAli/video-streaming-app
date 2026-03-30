@@ -1,5 +1,5 @@
 /*
-  Socket hook — SocketContext'e kolay erisim
+  Socket hook — easy access to SocketContext
 */
 import { useContext } from 'react';
 import { SocketContext } from '../context/SocketContext';
@@ -7,7 +7,7 @@ import { SocketContext } from '../context/SocketContext';
 export function useSocket() {
   const context = useContext(SocketContext);
   if (!context) {
-    throw new Error('useSocket, SocketProvider icinden cagirilmali');
+    throw new Error('useSocket must be used within a SocketProvider');
   }
   return context;
 }

@@ -1,7 +1,7 @@
 /*
-  Kayit sayfasi
-  Kullanici adi, email ve sifre ile yeni hesap olusturma.
-  Basarili kayitta otomatik giris yapilir
+  Register page
+  Create new account with username, email and password.
+  Automatically logs in on successful registration
 */
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -22,7 +22,7 @@ export default function RegisterPage() {
     setError('');
 
     if (password !== confirmPassword) {
-      setError('Şifreler eşleşmiyor');
+      setError('Passwords don\'t match');
       return;
     }
 
@@ -31,7 +31,7 @@ export default function RegisterPage() {
       await register(username, email, password);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Kayit sirasinda bir hata olustu');
+      setError(err.response?.data?.message || 'An error occurred during registration');
     } finally {
       setLoading(false);
     }
@@ -42,7 +42,7 @@ export default function RegisterPage() {
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900">🎬 VideoStream</h1>
-          <p className="text-gray-600 mt-2">Yeni hesap oluşturun</p>
+          <p className="text-gray-600 mt-2">Create a new account</p>
         </div>
 
         <div className="bg-white rounded-lg shadow-md p-8">
@@ -55,7 +55,7 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Kullanıcı Adı
+                Username
               </label>
               <input
                 type="text"
@@ -65,7 +65,7 @@ export default function RegisterPage() {
                 minLength={3}
                 maxLength={30}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="kullanici_adi"
+                placeholder="username"
               />
             </div>
 
@@ -79,13 +79,13 @@ export default function RegisterPage() {
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="ornek@email.com"
+                placeholder="example@email.com"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Şifre
+                Password
               </label>
               <input
                 type="password"
@@ -94,13 +94,13 @@ export default function RegisterPage() {
                 required
                 minLength={6}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="En az 6 karakter"
+                placeholder="At least 6 characters"
               />
             </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Şifre Tekrar
+                Confirm Password
               </label>
               <input
                 type="password"
@@ -109,7 +109,7 @@ export default function RegisterPage() {
                 required
                 minLength={6}
                 className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                placeholder="Şifrenizi tekrar girin"
+                placeholder="Re-enter your password"
               />
             </div>
 
@@ -118,14 +118,14 @@ export default function RegisterPage() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Kayıt yapılıyor...' : 'Kayıt Ol'}
+              {loading ? 'Registering...' : 'Register'}
             </button>
           </form>
 
           <p className="text-center text-sm text-gray-600 mt-6">
-            Zaten hesabınız var mı?{' '}
+            Already have an account?{' '}
             <Link to="/login" className="text-blue-600 hover:underline font-medium">
-              Giriş Yap
+              Login
             </Link>
           </p>
         </div>

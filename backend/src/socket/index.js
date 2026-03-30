@@ -1,8 +1,8 @@
 /*
-  Socket.io yapilandirmasi ve baglanti yonetimi
-  Her kullanici kendi "room"una katilir (user:{userId}).
-  Video isleme sirasinda sadece ilgili kullaniciya progress bilgisi gider.
-  JWT ile kimlik dogrulamasi yapilir — yetkisiz baglanti kabul edilmez
+  Socket.io configuration and connection management
+  Each user joins their own "room" (user:{userId}).
+  During video processing, progress info is sent only to the relevant user.
+  JWT authentication is used — unauthorized connections are rejected
 */
 const { Server } = require('socket.io');
 const jwt = require('jsonwebtoken');
@@ -16,12 +16,12 @@ function initializeSocket(httpServer) {
     }
   });
 
-  // baglanti oncesi JWT kontrolu
+  // JWT check before connection
   io.use((socket, next) => {
     const token = socket.handshake.auth.token;
 
     if (!token) {
-      return next(new Error('Kimlik dogrulama gerekli'));
+      return next(new Error('Authentication required'));
     }
 
     try {
@@ -29,24 +29,24 @@ function initializeSocket(httpServer) {
       socket.userId = decoded.id;
       next();
     } catch (err) {
-      return next(new Error('Gecersiz token'));
+      return next(new Error('Invalid token'));
     }
   });
 
   io.on('connection', (socket) => {
-    console.log(`Kullanici baglandi: ${socket.userId} (socket: ${socket.id})`);
+    console.log(`User connected: ${socket.userId} (socket: ${socket.id})`);
 
-    // kullaniciya ozel room'a katil — processing eventleri buraya gonderilecek
+    // Join user-specific room — processing events will be sent here
     socket.join(`user:${socket.userId}`);
 
-    // baglanti kopma
+    // Disconnection
     socket.on('disconnect', () => {
-      console.log(`Kullanici ayrildi: ${socket.userId}`);
+      console.log(`User disconnected: ${socket.userId}`);
     });
 
-    // hata loglama
+    // Error logging
     socket.on('error', (err) => {
-      console.error(`Socket hatasi (${socket.userId}):`, err.message);
+      console.error(`Socket error (${socket.userId}):`, err.message);
     });
   });
 

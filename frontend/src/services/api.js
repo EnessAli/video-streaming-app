@@ -1,8 +1,8 @@
 /*
   Axios API instance
-  Tum HTTP istekleri bu instance uzerinden yapilir.
-  Interceptor ile token yenileme otomatik: 401 gelirse refresh dener,
-  basariliysa orijinal istegi tekrarlar
+  All HTTP requests are made through this instance.
+  Interceptor handles automatic token refresh: on 401 it attempts refresh,
+  and retries the original request if successful
 */
 import axios from 'axios';
 
@@ -10,13 +10,13 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
-  withCredentials: true, // cookie gonderimi icin sart
+  withCredentials: true, // required for cookie transmission
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// her istege access token ekle
+// attach access token to every request
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('accessToken');
   if (token) {
@@ -25,7 +25,7 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// response interceptor — 401 gelirse token yenile ve tekrar dene
+// response interceptor — refresh token and retry on 401
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -45,9 +45,9 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // token suresi dolmussa ve daha once denenmemisse
+    // if token expired and not yet retried
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // refresh istegi kendisi 401 alirsa sonsuz donguye girmesin
+      // prevent infinite loop if refresh request itself gets 401
       if (originalRequest.url === '/auth/refresh') {
         localStorage.removeItem('accessToken');
         window.location.href = '/login';
@@ -55,7 +55,7 @@ api.interceptors.response.use(
       }
 
       if (isRefreshing) {
-        // baska bir istek zaten refresh yapiyor — sirada bekle
+        // another request is already refreshing — wait in queue
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         }).then((token) => {
@@ -72,7 +72,7 @@ api.interceptors.response.use(
         const newToken = data.accessToken;
         localStorage.setItem('accessToken', newToken);
 
-        // bekleyen istekleri yeni token ile devam ettir
+        // resume queued requests with the new token
         processQueue(null, newToken);
 
         originalRequest.headers.Authorization = `Bearer ${newToken}`;

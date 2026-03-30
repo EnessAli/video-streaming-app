@@ -1,5 +1,5 @@
 /*
-  Yukleme spinner'i — veri cekilirken gosterilir
+  Loading spinner — shown while data is being fetched
 */
 export default function LoadingSpinner({ size = 'md', text = '' }) {
   const sizes = {

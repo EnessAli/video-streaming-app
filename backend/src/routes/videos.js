@@ -1,7 +1,7 @@
 /*
-  Video route'lari
-  Upload, listeleme, detay, guncelleme, silme ve streaming endpointleri.
-  Multer middleware sadece upload route'unda calisir
+  Video routes
+  Upload, listing, detail, update, delete and streaming endpoints.
+  Multer middleware only runs on the upload route
 */
 const express = require('express');
 const router = express.Router();
@@ -18,28 +18,28 @@ const {
   streamVideo
 } = require('../controllers/videoController');
 
-// tum route'lar oturum gerektirir
+// All routes require authentication
 router.use(protect);
 
-// video yukleme — sadece editor ve admin
+// Video upload — editor and admin only
 router.post('/upload', authorize('editor', 'admin'), upload.single('video'), uploadVideo);
 
-// kullanicinin kendi videolari
+// User's own videos
 router.get('/', getMyVideos);
 
-// admin icin tum videolar
+// All videos for admin
 router.get('/all', authorize('admin'), getAllVideos);
 
-// tek video detay
+// Single video detail
 router.get('/:id', getVideoById);
 
-// video guncelleme — editor ve admin (sahiplik kontrolu controller'da)
+// Video update — editor and admin (ownership check in controller)
 router.put('/:id', authorize('editor', 'admin'), updateVideo);
 
-// video silme
+// Video delete
 router.delete('/:id', authorize('editor', 'admin'), deleteVideo);
 
-// video streaming — ayri path, kolay anlasilsin
+// Video streaming — separate path for clarity
 router.get('/stream/:id', streamVideo);
 
 module.exports = router;

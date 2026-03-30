@@ -1,7 +1,7 @@
 /*
-  Admin paneli — sadece admin rolundeki kullanicilara acik
-  Iki sekme: kullanici yonetimi ve tum videolarin listesi.
-  Rol degistirme, kullanici silme ve video silme islemleri burada
+  Admin panel — accessible only to users with admin role
+  Two tabs: user management and all videos list.
+  Role change, user deletion and video deletion operations here
 */
 import { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
@@ -15,11 +15,11 @@ export default function AdminPage() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('users');
 
-  // kullanici state'leri
+  // user states
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(true);
 
-  // video state'leri
+  // video states
   const [videos, setVideos] = useState([]);
   const [videosLoading, setVideosLoading] = useState(true);
   const [videoPagination, setVideoPagination] = useState(null);
@@ -27,7 +27,7 @@ export default function AdminPage() {
 
   const [message, setMessage] = useState({ text: '', type: '' });
 
-  // kullanicilari cek
+  // fetch users
   useEffect(() => {
     if (activeTab === 'users') fetchUsers();
     if (activeTab === 'videos') fetchVideos();
@@ -39,7 +39,7 @@ export default function AdminPage() {
       const data = await adminService.getAllUsers();
       setUsers(data.users);
     } catch (err) {
-      showMessage('Kullanıcılar yüklenemedi', 'error');
+      showMessage('Failed to load users', 'error');
     } finally {
       setUsersLoading(false);
     }
@@ -52,7 +52,7 @@ export default function AdminPage() {
       setVideos(data.videos);
       setVideoPagination(data.pagination);
     } catch (err) {
-      showMessage('Videolar yüklenemedi', 'error');
+      showMessage('Failed to load videos', 'error');
     } finally {
       setVideosLoading(false);
     }
@@ -63,42 +63,42 @@ export default function AdminPage() {
     setTimeout(() => setMessage({ text: '', type: '' }), 3000);
   };
 
-  // rol degistir
+  // change role
   const handleRoleChange = async (userId, newRole) => {
     try {
       await adminService.updateUserRole(userId, newRole);
       setUsers((prev) =>
         prev.map((u) => (u._id === userId ? { ...u, role: newRole } : u))
       );
-      showMessage('Rol güncellendi');
+      showMessage('Role updated');
     } catch (err) {
-      showMessage(err.response?.data?.message || 'Rol güncellenemedi', 'error');
+      showMessage(err.response?.data?.message || 'Failed to update role', 'error');
     }
   };
 
-  // kullanici sil
+  // delete user
   const handleDeleteUser = async (userId, username) => {
-    if (!window.confirm(`${username} kullanıcısını silmek istediğinize emin misiniz? Tüm videoları da silinecek.`)) return;
+    if (!window.confirm(`Are you sure you want to delete user ${username}? All their videos will also be deleted.`)) return;
 
     try {
       await adminService.deleteUser(userId);
       setUsers((prev) => prev.filter((u) => u._id !== userId));
-      showMessage('Kullanıcı silindi');
+      showMessage('User deleted');
     } catch (err) {
-      showMessage(err.response?.data?.message || 'Kullanıcı silinemedi', 'error');
+      showMessage(err.response?.data?.message || 'Failed to delete user', 'error');
     }
   };
 
-  // video sil
+  // delete video
   const handleDeleteVideo = async (videoId, title) => {
-    if (!window.confirm(`"${title}" videosunu silmek istediğinize emin misiniz?`)) return;
+    if (!window.confirm(`Are you sure you want to delete the video "${title}"?`)) return;
 
     try {
       await videoService.deleteVideo(videoId);
       setVideos((prev) => prev.filter((v) => v._id !== videoId));
-      showMessage('Video silindi');
+      showMessage('Video deleted');
     } catch (err) {
-      showMessage(err.response?.data?.message || 'Video silinemedi', 'error');
+      showMessage(err.response?.data?.message || 'Failed to delete video', 'error');
     }
   };
 
@@ -109,7 +109,7 @@ export default function AdminPage() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">Admin Panel</h1>
 
-        {/* bildirim mesaji */}
+        {/* notification message */}
         {message.text && (
           <div className={`mb-4 p-3 rounded-lg text-sm ${
             message.type === 'error'
@@ -120,7 +120,7 @@ export default function AdminPage() {
           </div>
         )}
 
-        {/* sekme gecisleri */}
+        {/* tab switches */}
         <div className="flex gap-1 mb-6 bg-gray-200 rounded-lg p-1 w-fit">
           <button
             onClick={() => setActiveTab('users')}
@@ -128,7 +128,7 @@ export default function AdminPage() {
               activeTab === 'users' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Kullanıcılar
+            Users
           </button>
           <button
             onClick={() => setActiveTab('videos')}
@@ -136,26 +136,26 @@ export default function AdminPage() {
               activeTab === 'videos' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-600 hover:text-gray-900'
             }`}
           >
-            Tüm Videolar
+            All Videos
           </button>
         </div>
 
-        {/* kullanici tablosu */}
+        {/* user table */}
         {activeTab === 'users' && (
           usersLoading ? (
-            <LoadingSpinner text="Kullanıcılar yükleniyor..." />
+            <LoadingSpinner text="Loading users..." />
           ) : (
             <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="bg-gray-50 border-b">
                     <tr>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Kullanıcı</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">User</th>
                       <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Email</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Rol</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Video</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Kayıt</th>
-                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Role</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Videos</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Registered</th>
+                      <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -177,7 +177,7 @@ export default function AdminPage() {
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-600">{u.videoCount || 0}</td>
                         <td className="px-4 py-3 text-sm text-gray-500">
-                          {new Date(u.createdAt).toLocaleDateString('tr-TR')}
+                          {new Date(u.createdAt).toLocaleDateString('en-US')}
                         </td>
                         <td className="px-4 py-3">
                           {u._id !== user?._id && (
@@ -185,7 +185,7 @@ export default function AdminPage() {
                               onClick={() => handleDeleteUser(u._id, u.username)}
                               className="text-sm text-red-600 hover:text-red-800"
                             >
-                              Sil
+                              Delete
                             </button>
                           )}
                         </td>
@@ -198,10 +198,10 @@ export default function AdminPage() {
           )
         )}
 
-        {/* video tablosu */}
+        {/* video table */}
         {activeTab === 'videos' && (
           videosLoading ? (
-            <LoadingSpinner text="Videolar yükleniyor..." />
+            <LoadingSpinner text="Loading videos..." />
           ) : (
             <>
               <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
@@ -209,13 +209,13 @@ export default function AdminPage() {
                   <table className="w-full">
                     <thead className="bg-gray-50 border-b">
                       <tr>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Başlık</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Yükleyen</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Durum</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Hassasiyet</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Boyut</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Tarih</th>
-                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">İşlemler</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Title</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Uploader</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Sensitivity</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Size</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
+                        <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y">
@@ -225,7 +225,7 @@ export default function AdminPage() {
                             {v.title}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-600">
-                            {v.uploader?.username || 'Bilinmiyor'}
+                            {v.uploader?.username || 'Unknown'}
                           </td>
                           <td className="px-4 py-3">
                             <StatusBadge status={v.status} type="status" />
@@ -237,14 +237,14 @@ export default function AdminPage() {
                             {(v.fileSize / 1024 / 1024).toFixed(1)} MB
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-500">
-                            {new Date(v.createdAt).toLocaleDateString('tr-TR')}
+                            {new Date(v.createdAt).toLocaleDateString('en-US')}
                           </td>
                           <td className="px-4 py-3">
                             <button
                               onClick={() => handleDeleteVideo(v._id, v.title)}
                               className="text-sm text-red-600 hover:text-red-800"
                             >
-                              Sil
+                              Delete
                             </button>
                           </td>
                         </tr>
@@ -254,7 +254,7 @@ export default function AdminPage() {
                 </div>
               </div>
 
-              {/* video sayfalama */}
+              {/* video pagination */}
               {videoPagination && videoPagination.pages > 1 && (
                 <div className="flex justify-center gap-2 mt-6">
                   <button
@@ -262,17 +262,17 @@ export default function AdminPage() {
                     disabled={videoPage === 1}
                     className="px-4 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
                   >
-                    Önceki
+                    Previous
                   </button>
                   <span className="px-4 py-2 text-sm text-gray-600">
-                    Sayfa {videoPage} / {videoPagination.pages}
+                    Page {videoPage} / {videoPagination.pages}
                   </span>
                   <button
                     onClick={() => setVideoPage((p) => Math.min(videoPagination.pages, p + 1))}
                     disabled={videoPage === videoPagination.pages}
                     className="px-4 py-2 bg-white border rounded-lg text-sm hover:bg-gray-50 disabled:opacity-50"
                   >
-                    Sonraki
+                    Next
                   </button>
                 </div>
               )}
